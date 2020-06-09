@@ -24,5 +24,8 @@
   "bugs": {
     "url": "https://github.com/GraphDebug/GraphDebug/issues"
   },
-  "homepage": "https://github.com/GraphDebug/GraphDebug#readme"
+  "homepage": "https://github.com/GraphDebug/GraphDebug#readme",
+  "dependencies": {
+    "vscode-debugprotocol": "^1.41.0"
+  }
 }
