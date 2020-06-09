@@ -1,0 +1,9 @@
+{
+  "compilerOptions": {
+    "noEmit": true,
+    "module": "ES6",
+    "target": "ES2017",
+    "strict": true,
+    "esModuleInterop": true
+  }
+}
