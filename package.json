@@ -27,8 +27,7 @@
   },
   "homepage": "https://github.com/GraphDebug/GraphDebug#readme",
   "dependencies": {
-    "@types/node": "^14.0.12",
-    "vscode-debugprotocol": "^1.41.0"
+    "@types/node": "^14.0.12"
   },
   "devDependencies": {
     "@babel/core": "^7.10.2",
