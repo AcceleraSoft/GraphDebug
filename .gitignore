@@ -1,0 +1,10 @@
+
+# ignore IDE extensions that might have been embedded in this repository
+/vscode/
+
+# files managed by npm or yarn
+node_modules/
+
+# compiled assets
+/dist/
+
