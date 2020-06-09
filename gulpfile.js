@@ -43,6 +43,11 @@ function bundle() {
           output: { filename: 'index.js' },
         }),
         merge(sharedWebpackConfig, {
+          entry: './src/register.ts',
+          target: 'node',
+          output: { filename: 'register.js' },
+        }),
+        merge(sharedWebpackConfig, {
           entry: './src/script.ts',
           target: 'web',
           output: { filename: 'script.js' },
@@ -64,6 +69,7 @@ function startWatch() {
 const watch = gulp.series(build, startWatch)
 
 module.exports = {
+  default: build,
   build,
   watch,
 }
