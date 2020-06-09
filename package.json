@@ -27,6 +27,7 @@
   },
   "homepage": "https://github.com/GraphDebug/GraphDebug#readme",
   "dependencies": {
+    "@types/node": "^14.0.12",
     "vscode-debugprotocol": "^1.41.0"
   },
   "devDependencies": {
@@ -38,6 +39,7 @@
     "minimist": "^1.2.5",
     "ts-loader": "^7.0.5",
     "typescript": "^3.9.5",
+    "vscode-debugadapter": "^1.41.0",
     "webpack": "^4.43.0",
     "webpack-cli": "^3.3.11",
     "webpack-merge": "^4.2.2",
