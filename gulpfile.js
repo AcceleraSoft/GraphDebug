@@ -1,4 +1,5 @@
 
+const fs = require('fs');
 const gulp = require('gulp')
 const webpack = require('webpack-stream');
 const merge = require('webpack-merge');
@@ -8,10 +9,19 @@ const log = require('fancy-log');
 // Files that will be copied to dist/ without any modifications
 const AUX_FILES = ['package.json', 'README.md', 'LICENSE.txt'];
 
+function zip(entries) {
+  const outObj = {};
+  for (const [k, v] of entries) {
+    outObj[k] = v;
+  }
+  return outObj;
+}
+
 // Add all your configuration overrides for Webpack here
 const sharedWebpackConfig = {
   mode: 'production',
   resolve: { extensions: ['.js', '.ts'] },
+  externals: zip(fs.readdirSync('node_modules'), m => ([m, `commonjs ${m}`])),
   module: {
     rules: [
       { test: /\.ts$/, exclude: /node_modules/, loader: "ts-loader", options: { transpileOnly: true } },
