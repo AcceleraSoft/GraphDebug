@@ -1,0 +1,2 @@
+
+export const DEBUGPROTOCOL_DEFAULT_TIMEOUT = 1000;

@@ -28,9 +28,7 @@
   "homepage": "https://github.com/GraphDebug/GraphDebug#readme",
   "dependencies": {
     "@types/node": "^14.0.13",
-    "find-free-ports": "^2.0.1",
-    "vscode-chrome-debug-core": "^6.8.9",
-    "vscode-debugprotocol": "^1.41.0"
+    "find-free-ports": "^2.0.1"
   },
   "devDependencies": {
     "@babel/core": "^7.10.2",

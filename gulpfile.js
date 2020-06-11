@@ -53,9 +53,9 @@ function bundle() {
           output: { filename: 'index.js' },
         }),
         merge(sharedWebpackConfig, {
-          entry: './src/register.ts',
+          entry: './src/cli.ts',
           target: 'node',
-          output: { filename: 'register.js' },
+          output: { filename: 'cli.js' },
         }),
         merge(sharedWebpackConfig, {
           entry: './src/script.ts',

@@ -21,8 +21,8 @@ interface RequestBase extends ProtocolMessageBase {
 
 /** A discriminated union of all possible messages that might be sent over the wire.  */
 export type ProtocolMessage
-    = RequestBase
-    | ResponseBase
+    = Request
+    | Response
     | Event
 
 /** A discriminated union of all possible events that can occur. */
@@ -403,11 +403,11 @@ export interface ProgressEndEvent extends EventBase {
 */
 export interface RunInTerminalRequest extends RequestBase {
     command: 'runInTerminal';
-    arguments: RunInTerminalRequestArguments;
+    arguments: RunInTerminalArguments;
 }
 
 /** Arguments for 'runInTerminal' request. */
-export interface RunInTerminalRequestArguments {
+export interface RunInTerminalArguments {
     /** What kind of terminal to launch. */
     kind?: 'integrated' | 'external';
     /** Optional title of the terminal. */
@@ -442,11 +442,11 @@ export interface RunInTerminalResponse extends SuccessResponse {
 */
 export interface InitializeRequest extends RequestBase {
     command: 'initialize';
-    arguments: InitializeRequestArguments;
+    arguments: InitializeArguments;
 }
 
 /** Arguments for 'initialize' request. */
-export interface InitializeRequestArguments {
+export interface InitializeArguments {
     /** The ID of the (frontend) client using this adapter. */
     clientID?: string;
     /** The human readable name of the (frontend) client using this adapter. */
@@ -507,11 +507,11 @@ export interface ConfigurationDoneResponse extends SuccessResponse {
 */
 export interface LaunchRequest extends RequestBase {
     command: 'launch';
-    arguments: LaunchRequestArguments;
+    arguments: LaunchArguments;
 }
 
 /** Arguments for 'launch' request. Additional attributes are implementation specific. */
-export interface LaunchRequestArguments {
+export interface LaunchArguments {
     /** If noDebug is true the launch request should launch the program without enabling debugging. */
     noDebug?: boolean;
     /** Optional data from the previous, restarted session.
@@ -519,6 +519,9 @@ export interface LaunchRequestArguments {
         The client should leave the data intact.
     */
     __restart?: any;
+    /** The specification allows for adapters to accept custom fields. */
+    // FIXME This should be a generic type argument instead
+    [key: string]: any;
 }
 
 /** Response to 'launch' request. This is just an acknowledgement, so no body field is required. */
@@ -532,11 +535,11 @@ export interface LaunchResponse extends SuccessResponse {
 */
 export interface AttachRequest extends RequestBase {
     command: 'attach';
-    arguments: AttachRequestArguments;
+    arguments: AttachArguments;
 }
 
 /** Arguments for 'attach' request. Additional attributes are implementation specific. */
-export interface AttachRequestArguments {
+export interface AttachArguments {
     /** Optional data from the previous, restarted session.
         The data is sent as the 'restart' attribute of the 'terminated' event.
         The client should leave the data intact.
@@ -2311,6 +2314,7 @@ export type EventName = Event['event'];
 export type CommandName = Request['command'];
 
 export type EventFor<E extends EventName> = Extract<Event, { event: E }>;
-export type ResponseFor<C extends CommandName> = Extract<Response, { command: C }>;
-export type RequestFor<C extends CommandName> = Extract<Request, { command: C }>;
+export type ResponseFor<C extends CommandName> = Extract<Response, { command: C }> | ErrorResponse;
+export type RequestFor<C extends CommandName> = Extract<Request, { command: C }> | ErrorResponse;
 
+export type ArgumentsFor<C extends CommandName> = RequestFor<C>['arguments'];

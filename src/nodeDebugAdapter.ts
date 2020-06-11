@@ -1,24 +1,19 @@
+/**
+ * A lite version of a debug adapter for NodeJS.
+ * 
+ * Created by examining the sources of Microsoft's vscode-node-debug2 and completely written
+ * by the authord of this module.
+ * 
+ * @author Sam Vervaeck
+ */
 
-import * as os from "os"
-import * as fs from "fs"
 import * as path from "path"
-import * as net from "net"
-import * as http from "http"
-import { AddressInfo } from "net";
+import * as os from "os"
 import { spawn } from "child_process"
-import findFreePorts from "find-free-ports"
 
-import minimist from "minimist"
 import { DebugProtocol } from "vscode-debugprotocol"
-import { DebugSession, CapabilitiesEvent } from "vscode-debugadapter"
+import { CapabilitiesEvent } from "vscode-debugadapter"
 import { ICommonRequestArgs, ChromeDebugSession, ScriptContainer, ChromeDebugAdapter, Breakpoints } from "vscode-chrome-debug-core"
-
-import { getHtmlFor } from "./index"
-import { rejects } from "assert"
-
-const PORT = parseInt(process.env['GRAPHDEBUG_PORT'] ?? '29999');
-
-const DEBUGPROTOCOL_REQUEST_TIMEOUT = 1000;
 
 const NODE_INTERNALS_DISPLAY_STR = '<node_internals>';
 
@@ -45,7 +40,7 @@ export interface LaunchRequestArguments extends DebugProtocol.LaunchRequestArgum
   /** Optional arguments passed to the debuggee. */
   args?: string[];
   /** Launch the debuggee in this working directory (specified as an absolute path). If omitted the debuggee is lauched in its own directory. */
-  cwd: string;
+  cwd?: string;
   /** Absolute path to the runtime executable to be used. Default is the runtime executable on the PATH. */
   runtimeExecutable?: string;
   /** Optional arguments passed to the runtime executable. */
@@ -131,16 +126,16 @@ class NodeDebugAdapter extends ChromeDebugAdapter {
 
   public async configurationDone() {
     super.sendInitializedEvent();
+    await this._breakpoints.breakpointsQueueDrained;
     this.events.emit(ChromeDebugSession.FinishedStartingUpEventName, { onPaused: true });
+    await this.continue();
     await super.configurationDone();
   }
 
   public async launch(args: LaunchRequestArguments): Promise<void> {
     await super.launch(args);
     const shouldDebug = !(args.noDebug ?? false);
-    console.log("HERE")
     const [ inspectPort ] = await findFreePorts(1);
-    console.log('HORE')
     const scriptPath = args.program;
     const runtimeArgs = args.runtimeArgs ?? [];
     let env = { ...process.env, ...args.env };
@@ -148,7 +143,7 @@ class NodeDebugAdapter extends ChromeDebugAdapter {
       env = { ...collectEnvFileArgs(args.envFile), ...env };
     }
     const cwd = args.cwd ?? path.dirname(scriptPath);
-    const spawned = spawn(process.argv0, [`--inspect-brk=${inspectPort}`, ...runtimeArgs, ...process.argv.slice(2)], { env, stdio: 'inherit' })
+    const spawned = spawn(process.argv0, [`--inspect-brk=${inspectPort}`, ...runtimeArgs, ...process.argv.slice(2)], { env, stdio: 'inherit', cwd })
     spawned.on('error', err => { throw err; });
     spawned.on('exit', code => {
       const msg = code !== 0 
@@ -164,7 +159,7 @@ class NodeDebugAdapter extends ChromeDebugAdapter {
 
 }
 
-class NodeDebugSession extends ChromeDebugSession {
+export class CustomNodeDebugSession extends ChromeDebugSession {
   constructor(debuggerLinesStartAt1: boolean, isServer: boolean) {
     super(debuggerLinesStartAt1, isServer, {
       logFilePath: path.join(os.tmpdir(), 'graphdebug-node.txt'),
@@ -175,74 +170,3 @@ class NodeDebugSession extends ChromeDebugSession {
     })
   } 
 }
-
-async function register() {
-  
-  let scriptPath: string;
-  let restArgs: string[] = [];
-
-  let i = 2
-  for (; i < process.argv.length; i++) {
-    const arg = process.argv[i];
-    if (!arg.startsWith('-')) {
-      scriptPath = arg;
-      break;
-    } else {
-      restArgs.push(arg);
-    }
-  }
-  for (; i < process.argv.length; i++) {
-    restArgs.push(process.argv[i]);
-  }
-
-  const [ debugProtoPort ] = await findFreePorts(1);
-
-  const debugProtoServer = net.createServer(socket => {
-    const session = new NodeDebugSession(false, true);
-    session.setRunAsServer(true);
-    session.start(socket, socket);
-  })
-
-  debugProtoServer.listen(debugProtoPort, () => {
-    const connection = net.createConnection(debugProtoPort)
-    const socket = net.createConnection(debugProtoPort)
-    socket.on('connect', () => {
-      const session = new NodeDebugSession(false, false);
-      session.start(socket, socket);
-      console.log(`Launching ${scriptPath}`)
-      session.addListener('breakpoint', () => {
-        updateGraph();
-      })
-      session.sendRequest('launch', {
-        program: scriptPath,
-        args: restArgs,
-      }, DEBUGPROTOCOL_REQUEST_TIMEOUT, res => {
-        console.log(res);
-      })
-    })
-  })
-
-  function updateGraph() {
-    console.log('breakpoint triggered');
-  }
-
-  const args = minimist(process.argv.slice(2));
-
-  const server = http.createServer((req, res) => {
-    const html = getHtmlFor(path.resolve(__dirname, 'script.js'));
-    res.write(html);
-    res.end();
-  });
-
-  server.listen(PORT, () => {
-    console.log(`Serving application on http://localhost:${(server.address()! as AddressInfo).port}/`)
-  });
-
-  process.on('exit', () => {
-    //server.close();
-  });
-
-}
-
-register();
-
